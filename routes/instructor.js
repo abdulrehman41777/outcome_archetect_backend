@@ -86,7 +86,7 @@ router.delete("/delete-instrctor/:instructorID", async (req, res) => {
   try {
     const { instructorID } = req.params;
     const findInstructor = await instructor.findById(instructorID);
-    if (!deleteInstructor) {
+    if (!findInstructor) {
       return res.status(404).json({ message: "Instructor Not Found" });
     }
     await courses.deleteMany({
@@ -109,8 +109,13 @@ router.delete("/delete-instrctor/:instructorID", async (req, res) => {
       { "comments.userID": findInstructor._id },
       { $pull: { comments: { userID: findInstructor._id } } }
     );
+
+    const findStudent = await Student.find({
+      $and: [{ invitedByID: findInstructor._id }],
+    });
+
     await post.updateMany(
-      { "comments.replies.userID": findStudent._id },
+      { "comments.replies.userID": { $in: findStudent._id } },
       { $pull: { "comments.$.replies": { userID: findInstructor._id } } }
     );
 
@@ -120,7 +125,7 @@ router.delete("/delete-instrctor/:instructorID", async (req, res) => {
 
     await instructor.findByIdAndDelete(findInstructor._id);
 
-    res.status(200).json(deleteInstructor);
+    res.status(200).json(findInstructor);
   } catch (error) {
     console.log(error);
     res.status(500).json(error);

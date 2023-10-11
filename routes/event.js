@@ -113,9 +113,9 @@ router.patch("/:userID/update-event/:eventID", async (req, res) => {
 router.get("/all-events", async (req, res) => {
   try {
     const findEvents = await event.find().populate({
-      model:"instructors",
-      path:"instructorID",
-      select:"username profileImg"
+      model: "instructors",
+      path: "instructorID",
+      select: "username profileImg",
     });
     res.status(200).json(findEvents);
   } catch (error) {
@@ -160,18 +160,26 @@ router.get("/:userID/get-schedules-by-instructor", async (req, res) => {
 
     const currentTime = momentTz.tz(moment(), "Asia/Karachi");
     const getDate = moment().format("YYYY-MM-DD");
-    console.log(getDate);
-    const resDate = moment(currentTime).format("hh:mm:ss");
+
+    const resDate = moment(currentTime).format("HH:mm:ss");
     const timeSplitter = resDate.split(":");
     const hour = timeSplitter[0];
     const min = timeSplitter[1];
     const joined = `${hour}:${min}`;
 
-
     // Filter events that are not expired
     const nonExpiredEvents = findEvents.filter((event) => {
+      console.log("Event Date:", event.date);
+      console.log("Event End Time:", event.endTime);
+      console.log("Current Date:", getDate);
+      console.log("Current Time:", joined);
       return event.date >= getDate && event.endTime >= joined; // Check if event end time is in the future
     });
+
+    // // Filter events that are not expired
+    // const nonExpiredEvents = findEvents.filter((event) => {
+    //   return event.date >= getDate && event.endTime >= joined; // Check if event end time is in the future
+    // });
 
     // Extract instructor IDs from non-expired events
     const instructorIDs = nonExpiredEvents.map((event) => event.instructorID);
